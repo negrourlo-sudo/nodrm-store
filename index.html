@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Novedades</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .featured-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body data-page="novedades">
+    <!-- ASCII Background Effects -->
+    <div class="ascii-bg" id="asciiBg"></div>
+    <div class="circuit-pattern"></div>
+    <div class="retro-scanline"></div>
+    
+    <!-- ASCII Corner Decorations -->
+    <pre class="ascii-decoration ascii-corner-tl">
+    ╔══════════╗
+    ║  NO DRM  ║
+    ╚══════════╝
+    </pre>
+    <pre class="ascii-decoration ascii-corner-br">
+    ┌──────────┐
+    │ > PLAY_  │
+    └──────────┘
+    </pre>
+    
+    <!-- Floating ASCII Particles -->
+    <div class="ascii-particle" style="left: 10%; top: 30%; animation-delay: 0s;">■</div>
+    <div class="ascii-particle" style="left: 20%; top: 60%; animation-delay: 1s;">◆</div>
+    <div class="ascii-particle" style="left: 80%; top: 40%; animation-delay: 2s;">▲</div>
+    <div class="ascii-particle" style="left: 70%; top: 70%; animation-delay: 3s;">●</div>
+    <div class="ascii-particle" style="left: 40%; top: 20%; animation-delay: 4s;">★</div>
+    <div class="ascii-particle" style="left: 90%; top: 50%; animation-delay: 5s;">♠</div>
+    <div class="ascii-particle" style="left: 5%; top: 80%; animation-delay: 6s;">♦</div>
+    <div class="ascii-particle" style="left: 60%; top: 10%; animation-delay: 7s;">♣</div>
+    
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                    <li><a href="perfil.html">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <div class="hero-content">
+                <h1>Juegos <span>sin restricciones</span>. DRM-free. Tuyo para siempre.</h1>
+                <p>Compra, descarga, juega. Sin verificaciones online, sin límites. Propiedad real de tus juegos.</p>
+                <a href="catalogo.html" class="btn btn-primary">Explorar Catálogo</a>
+            </div>
+            <div class="hero-image">
+                <div class="hero-image-placeholder">🎮</div>
+            </div>
+        </div>
+
+        <div class="quick-stats">
+            <div class="stat-box">
+                <div class="stat-icon">📦</div>
+                <div class="stat-number">30+</div>
+                <div class="stat-text">Juegos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">🔓</div>
+                <div class="stat-number">0</div>
+                <div class="stat-text">DRM</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">⬇️</div>
+                <div class="stat-number">100%</div>
+                <div class="stat-text">Offline</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">∞</div>
+                <div class="stat-number">∞</div>
+                <div class="stat-text">Licencias</div>
+            </div>
+        </div>
+
+        <section class="featured-section">
+            <div class="section-header">
+                <h2 class="section-title">// Destacados</h2>
+                <div class="carousel-controls">
+                    <button class="carousel-btn" id="prevBtn">◀</button>
+                    <button class="carousel-btn" id="nextBtn">▶</button>
+                </div>
+            </div>
+            
+            <div class="carousel-container">
+                <div class="carousel-track" id="carouselTrack"></div>
+            </div>
+            
+            <div class="carousel-indicators" id="carouselIndicators"></div>
+        </section>
+
+        <h2 class="section-title">// Últimos Lanzamientos</h2>
+        <div class="games-grid" id="novedades-grid"></div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let currentSlide = 0;
+        let slides = [];
+        let autoPlayInterval;
+        
+        async function initCarousel() {
+            const { data: featuredGames } = await SupabaseApp.Games.getFeatured();
+            const games = (featuredGames || []).slice(0, 5);
+            const track = document.getElementById('carouselTrack');
+            const indicators = document.getElementById('carouselIndicators');
+            
+            track.innerHTML = games.map((game, index) => `
+                <div class="carousel-slide ${index === 0 ? 'active' : ''}">
+                    <div class="featured-card">
+                        <div class="featured-image">
+                            <img src="${game.cover_image}" alt="${game.title}">
+                        </div>
+                        <div class="featured-info">
+                            <span class="featured-badge">★ Destacado</span>
+                            <h3 class="featured-title">${game.title}</h3>
+                            <p class="featured-description">${(game.description || '').substring(0, 150)}...</p>
+                            <div class="featured-meta">
+                                <div class="meta-item">Dev: <span>${game.developer}</span></div>
+                                <div class="meta-item">Rating: <span>${game.rating}/5</span></div>
+                            </div>
+                            <div class="featured-price">
+                                ${game.discount > 0 ? `
+                                    <span class="original-price">€${game.price}</span>
+                                    <span class="current-price">€${(game.price * (1 - game.discount / 100)).toFixed(2)}</span>
+                                    <span class="discount-badge">-${game.discount}%</span>
+                                ` : `
+                                    <span class="current-price">€${game.price}</span>
+                                `}
+                            </div>
+                            <div class="featured-actions">
+                                <button class="btn btn-primary" onclick="addToCart(${game.id})">Comprar</button>
+                                <button class="btn btn-secondary" onclick="toggleWishlist(${game.id})">Lista de Deseos</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            indicators.innerHTML = games.map((_, index) => `
+                <div class="indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></div>
+            `).join('');
+            
+            indicators.querySelectorAll('.indicator').forEach(indicator => {
+                indicator.addEventListener('click', () => goToSlide(parseInt(indicator.dataset.slide)));
+            });
+            
+            slides = track.querySelectorAll('.carousel-slide');
+            startAutoPlay();
+        }
+        
+        function goToSlide(index) {
+            const track = document.getElementById('carouselTrack');
+            const indicators = document.querySelectorAll('.indicator');
+            
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].classList.add('active');
+        }
+        
+        function nextSlide() {
+            goToSlide((currentSlide + 1) % slides.length);
+        }
+        
+        function prevSlide() {
+            goToSlide((currentSlide - 1 + slides.length) % slides.length);
+        }
+        
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(nextSlide, 5000);
+        }
+        
+        function stopAutoPlay() {
+            clearInterval(autoPlayInterval);
+        }
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            stopAutoPlay();
+            nextSlide();
+            startAutoPlay();
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            stopAutoPlay();
+            prevSlide();
+            startAutoPlay();
+        });
+        
+        document.querySelector('.carousel-container').addEventListener('mouseenter', stopAutoPlay);
+        document.querySelector('.carousel-container').addEventListener('mouseleave', startAutoPlay);
+        
+        document.addEventListener('DOMContentLoaded', initCarousel);
+        
+        // Matrix Rain Effect
+        function createMatrixRain() {
+            const container = document.getElementById('asciiBg');
+            if (!container) return;
+            
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const columns = Math.floor(window.innerWidth / 20);
+            
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'ascii-column';
+                column.style.left = (i * 20) + 'px';
+                column.style.animationDuration = (5 + Math.random() * 10) + 's';
+                column.style.animationDelay = (Math.random() * 5) + 's';
+                
+                // Generate random characters
+                let text = '';
+                const height = 10 + Math.floor(Math.random() * 20);
+                for (let j = 0; j < height; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '\n';
+                }
+                column.textContent = text;
+                
+                container.appendChild(column);
+            }
+        }
+        
+        createMatrixRain();
+    </script>
+</body>
+</html>

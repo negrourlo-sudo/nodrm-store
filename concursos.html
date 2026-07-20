@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Concursos Diarios</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .contest-hero {
+            background: var(--dark);
+            border: 1px solid var(--neon-yellow);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contest-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--neon-yellow), var(--neon-green), var(--neon-cyan));
+        }
+        
+        .contest-hero::after {
+            content: '⚡ CONCURSO DIARIO ⚡';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            background: var(--neon-yellow);
+            color: var(--black);
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius-sm);
+            animation: pulseGlow 1s infinite;
+        }
+        
+        .contest-title {
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .contest-title::before {
+            content: '//';
+            color: var(--neon-yellow);
+            margin-right: 0.5rem;
+        }
+        
+        .contest-game {
+            font-size: 1rem;
+            color: var(--neon-cyan);
+            margin-bottom: 1rem;
+        }
+        
+        .contest-description {
+            color: var(--off-white);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .contest-timer {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 20px rgba(255, 238, 0, 0.5);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .contest-timer::before {
+            content: '⏱';
+        }
+        
+        .timer-label {
+            font-size: 0.8rem;
+            color: var(--gray-medium);
+            margin-left: 0.5rem;
+        }
+        
+        .contest-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .contest-stat {
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .contest-stat .stat-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-medium);
+            margin-bottom: 0.3rem;
+        }
+        
+        .contest-stat .stat-value {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+        
+        .contest-stat .stat-value.prize {
+            color: var(--neon-yellow);
+            font-size: 1.5rem;
+        }
+        
+        /* Ticket System */
+        .ticket-section {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .ticket-title {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--neon-green);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ticket-title::before {
+            content: '##';
+            color: var(--gray-medium);
+        }
+        
+        .ticket-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .ticket-option {
+            background: var(--gray);
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ticket-option:hover {
+            border-color: var(--neon-green);
+            transform: translateY(-2px);
+        }
+        
+        .ticket-option.selected {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: var(--glow-green);
+        }
+        
+        .ticket-amount {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-green);
+            margin-bottom: 0.3rem;
+        }
+        
+        .ticket-price {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--neon-yellow);
+        }
+        
+        .ticket-chance {
+            font-size: 0.75rem;
+            color: var(--gray-medium);
+            margin-top: 0.5rem;
+        }
+        
+        .ticket-buy {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--gray);
+            border-radius: var(--radius-md);
+        }
+        
+        .ticket-total {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+        }
+        
+        .ticket-total span {
+            color: var(--neon-yellow);
+            font-weight: 700;
+        }
+        
+        .user-tickets {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+            margin-bottom: 1rem;
+        }
+        
+        .user-tickets span {
+            color: var(--neon-green);
+            font-weight: 700;
+        }
+        
+        /* Participants */
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .participant-card {
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .participant-card img {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .participant-tickets {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--neon-green);
+        }
+        
+        /* History */
+        .history-section {
+            margin-top: 2rem;
+        }
+        
+        .history-title {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .history-title::before {
+            content: '//';
+            color: var(--gray-medium);
+        }
+        
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .history-card {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .history-card:hover {
+            opacity: 1;
+            border-color: var(--neon-cyan);
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+        
+        .history-game {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--neon-cyan);
+        }
+        
+        .history-date {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--gray-medium);
+        }
+        
+        .history-challenge {
+            font-size: 0.95rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .history-winner {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background: var(--gray);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--neon-yellow);
+        }
+        
+        .history-winner img {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .winner-info {
+            flex: 1;
+        }
+        
+        .winner-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .winner-score {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--neon-green);
+        }
+        
+        .winner-prize {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--neon-yellow);
+        }
+        
+        /* Upcoming Contests */
+        .upcoming-section {
+            margin-top: 2rem;
+        }
+        
+        .upcoming-title {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--neon-purple);
+            margin-bottom: 1rem;
+        }
+        
+        .upcoming-list {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        
+        .upcoming-card {
+            min-width: 250px;
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+        
+        .upcoming-card:hover {
+            border-color: var(--neon-purple);
+        }
+        
+        .upcoming-game {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--neon-purple);
+            margin-bottom: 0.5rem;
+        }
+        
+        .upcoming-challenge {
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .upcoming-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        
+        .upcoming-date {
+            color: var(--gray-medium);
+        }
+        
+        .upcoming-prize {
+            color: var(--neon-yellow);
+        }
+        
+        @media (max-width: 768px) {
+            .contest-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .ticket-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .history-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body data-page="concursos">
+    <div class="ascii-bg" id="asciiBg"></div>
+    <div class="circuit-pattern"></div>
+    <div class="retro-scanline"></div>
+    
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html" class="active">Concursos</a></li>
+                    <li><a href="perfil.html">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="page-title">Concursos Diarios</h1>
+
+        <!-- Concurso Actual -->
+        <div class="contest-hero" id="current-contest"></div>
+
+        <!-- Sistema de Tickets -->
+        <div class="ticket-section" id="ticket-section"></div>
+
+        <!-- Participantes -->
+        <div class="profile-section">
+            <h3 class="section-title">Participantes Hoy</h3>
+            <div class="participants-grid" id="participants-grid"></div>
+        </div>
+
+        <!-- Historial -->
+        <div class="history-section">
+            <h2 class="history-title">Concursos Anteriores</h2>
+            <div class="history-grid" id="history-grid"></div>
+        </div>
+
+        <!-- Leaderboard por Concurso -->
+        <div class="history-section" id="contest-leaderboard-section" style="display:none;">
+            <h2 class="history-title">Leaderboard del Concurso Activo</h2>
+            <div id="contest-leaderboard" class="leaderboard-container"></div>
+        </div>
+
+        <!-- Próximos Concursos -->
+        <div class="upcoming-section">
+            <h3 class="upcoming-title">Próximos Concursos</h3>
+            <div class="upcoming-list" id="upcoming-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let selectedTickets = 1;
+        let currentContestData = null;
+        let userTicketsCount = 0;
+        
+        async function initContests() {
+            await Promise.all([
+                renderCurrentContest(),
+                renderHistory(),
+                renderUpcoming()
+            ]);
+            startCountdown();
+            await renderContestLeaderboard();
+        }
+        
+        async function renderCurrentContest() {
+            const { data: contest } = await SupabaseApp.Contests.getCurrent();
+            if (!contest) {
+                document.getElementById('current-contest').innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:3rem;">No hay concurso activo.</p>';
+                document.getElementById('ticket-section').innerHTML = '';
+                return;
+            }
+            currentContestData = contest;
+            
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const { totalTickets } = await SupabaseApp.Contests.getUserTickets(user.id, contest.id);
+                userTicketsCount = totalTickets;
+            }
+            
+            const gameName = contest.games?.title || '';
+            const endDate = contest.end_date ? new Date(contest.end_date) : null;
+            const now = new Date();
+            const diff = endDate ? Math.max(0, Math.floor((endDate - now) / 1000)) : 0;
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            
+            const container = document.getElementById('current-contest');
+            container.innerHTML = `
+                <h2 class="contest-title">${contest.challenge}</h2>
+                <p class="contest-game">🎮 ${gameName}</p>
+                <p class="contest-description">${contest.description || ''}</p>
+                <div class="contest-timer">
+                    <span id="countdown">${timeStr}</span>
+                    <span class="timer-label">restante</span>
+                </div>
+                <div class="contest-stats-row">
+                    <div class="contest-stat">
+                        <div class="stat-label">Premio</div>
+                        <div class="stat-value prize">€${contest.prize}</div>
+                    </div>
+                    <div class="contest-stat">
+                        <div class="stat-label">Tickets</div>
+                        <div class="stat-value">${contest.total_tickets_sold}</div>
+                    </div>
+                    <div class="contest-stat">
+                        <div class="stat-label">Precio Ticket</div>
+                        <div class="stat-value">€${contest.ticket_price}</div>
+                    </div>
+                </div>
+            `;
+            
+            renderTicketSection(contest);
+        }
+        
+        function renderTicketSection(contest) {
+            const container = document.getElementById('ticket-section');
+            const user = AuthManager.getCurrentUser();
+            const tp = contest.ticket_price;
+            
+            const options = [
+                { amount: 1, price: tp },
+                { amount: 3, price: tp * 3 * 0.9 },
+                { amount: 5, price: tp * 5 * 0.85 },
+                { amount: 10, price: tp * 10 * 0.8 }
+            ];
+            
+            container.innerHTML = `
+                <h3 class="ticket-title">Comprar Tickets</h3>
+                <p class="user-tickets">Tus tickets: <span>${user ? userTicketsCount : 0}</span></p>
+                
+                <div class="ticket-options">
+                    ${options.map((opt, i) => `
+                        <div class="ticket-option ${i === 0 ? 'selected' : ''}" onclick="selectTickets(${opt.amount}, ${opt.price}, this)">
+                            <div class="ticket-amount">${opt.amount}</div>
+                            <div class="ticket-price">€${opt.price.toFixed(2)}</div>
+                            <div class="ticket-chance">${((opt.amount / (contest.total_tickets_sold + opt.amount)) * 100).toFixed(1)}% probabilidad</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="ticket-buy">
+                    <div class="ticket-total">
+                        Total: <span id="ticket-total">€${tp.toFixed(2)}</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="buyTickets()">
+                        🎫 Comprar Tickets
+                    </button>
+                </div>
+            `;
+        }
+        
+        function selectTickets(amount, price, element) {
+            document.querySelectorAll('.ticket-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedTickets = amount;
+            document.getElementById('ticket-total').textContent = '€' + price.toFixed(2);
+        }
+        
+        async function buyTickets() {
+            const user = AuthManager.getCurrentUser();
+            if (!user) {
+                showNotification('Inicia sesión para comprar tickets', 'info');
+                return;
+            }
+            if (!currentContestData) return;
+            
+            const total = selectedTickets * currentContestData.ticket_price;
+            const { data, error } = await SupabaseApp.Contests.buyTickets(user.id, currentContestData.id, selectedTickets, total);
+            
+            if (error) {
+                showNotification('Error al comprar tickets', 'error');
+                return;
+            }
+            
+            showNotification(`¡${selectedTickets} tickets comprados! Buena suerte, gamer.`, 'success');
+            userTicketsCount += selectedTickets;
+            await renderCurrentContest();
+        }
+        
+        async function renderHistory() {
+            const { data: history } = await SupabaseApp.Contests.getHistory();
+            const container = document.getElementById('history-grid');
+            if (!history || history.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No hay concursos finalizados aún.</p>';
+                return;
+            }
+            
+            container.innerHTML = history.map(contest => {
+                const gameName = contest.games?.title || '';
+                const winnerName = contest.profiles?.display_name || 'Desconocido';
+                const winnerAvatar = contest.profiles?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
+                const dateStr = contest.end_date ? new Date(contest.end_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                
+                return `
+                <div class="history-card">
+                    <div class="history-header">
+                        <span class="history-game">🎮 ${gameName}</span>
+                        <span class="history-date">${dateStr}</span>
+                    </div>
+                    <p class="history-challenge">${contest.challenge}</p>
+                    <div class="history-winner">
+                        <img src="${winnerAvatar}" alt="${winnerName}">
+                        <div class="winner-info">
+                            <div class="winner-name">${winnerName}</div>
+                            <div class="winner-score">Score: ${contest.winning_score?.toLocaleString() || '—'}</div>
+                        </div>
+                        <div class="winner-prize">€${contest.prize}</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        async function renderUpcoming() {
+            const { data: upcoming } = await SupabaseApp.sb.from('daily_contests').select('*, games(title)').eq('status', 'active').gt('start_date', new Date().toISOString()).order('start_date', { ascending: true });
+            const container = document.getElementById('upcoming-list');
+            if (!upcoming || upcoming.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">No hay concursos próximos.</p>';
+                return;
+            }
+            
+            container.innerHTML = upcoming.map(contest => {
+                const gameName = contest.games?.title || '';
+                const dateStr = contest.start_date ? new Date(contest.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                
+                return `
+                <div class="upcoming-card">
+                    <div class="upcoming-game">🎮 ${gameName}</div>
+                    <p class="upcoming-challenge">${contest.challenge}</p>
+                    <div class="upcoming-meta">
+                        <span class="upcoming-date">${dateStr}</span>
+                        <span class="upcoming-prize">€${contest.prize}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        async function renderContestLeaderboard() {
+            const section = document.getElementById('contest-leaderboard-section');
+            const container = document.getElementById('contest-leaderboard');
+            if (!section || !container) return;
+            
+            const contestId = currentContestData?.id;
+            if (!contestId) { section.style.display = 'none'; return; }
+            
+            const { data, error } = await SupabaseApp.Leaderboard.getByContest(contestId);
+            if (error || !data || data.length === 0) { section.style.display = 'none'; return; }
+            
+            section.style.display = 'block';
+            container.innerHTML = `
+                <div class="leaderboard-header">
+                    <span>#</span>
+                    <span>Jugador</span>
+                    <span style="text-align:right">Score</span>
+                </div>
+                ${data.map((entry, i) => {
+                    const pos = i + 1;
+                    const p = entry.profiles;
+                    const name = p?.display_name || p?.username || 'Jugador';
+                    const username = p?.username || '';
+                    const avatar = p?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
+                    const topClass = pos <= 3 ? 'top-' + pos : '';
+                    return `
+                    <div class="leaderboard-entry ${topClass}">
+                        <div class="leaderboard-position">${pos}</div>
+                        <div class="leaderboard-player">
+                            <img src="${avatar}" alt="${name}">
+                            <div>
+                                <div class="leaderboard-player-name">${name}</div>
+                                <div class="leaderboard-player-username">@${username}</div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-score">${entry.score?.toLocaleString() || 0}</div>
+                    </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        function startCountdown() {
+            const el = document.getElementById('countdown');
+            if (!el) return;
+            let [hours, minutes, seconds] = el.textContent.split(':').map(Number);
+            
+            setInterval(() => {
+                seconds--;
+                if (seconds < 0) { seconds = 59; minutes--; }
+                if (minutes < 0) { minutes = 59; hours--; }
+                if (hours < 0) { el.textContent = '00:00:00'; return; }
+                
+                el.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+            }, 1000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', initContests);
+        
+        // Matrix Rain
+        function createMatrixRain() {
+            const container = document.getElementById('asciiBg');
+            if (!container) return;
+            const chars = '01¥€$£♦♠♣▲▼●○□■';
+            const columns = Math.floor(window.innerWidth / 20);
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'ascii-column';
+                column.style.left = (i * 20) + 'px';
+                column.style.animationDuration = (5 + Math.random() * 10) + 's';
+                column.style.animationDelay = (Math.random() * 5) + 's';
+                let text = '';
+                for (let j = 0; j < 15; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '\n';
+                }
+                column.textContent = text;
+                container.appendChild(column);
+            }
+        }
+        createMatrixRain();
+    </script>
+</body>
+</html>

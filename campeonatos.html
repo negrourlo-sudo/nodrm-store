@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Campeonatos</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tournaments-header {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tournaments-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-hot);
+        }
+        
+        .tournaments-header h1 {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .tournaments-header h1::before {
+            content: '//';
+            color: var(--neon-pink);
+        }
+        
+        .tournaments-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .t-stat {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--gray-medium);
+        }
+        
+        .t-stat span {
+            color: var(--neon-green);
+            font-weight: 700;
+        }
+        
+        .tournament-card {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tournament-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--neon-pink);
+        }
+        
+        .tournament-card:hover {
+            border-color: var(--neon-pink);
+            box-shadow: var(--glow-pink);
+        }
+        
+        .tournament-card.status-active::before {
+            background: var(--neon-green);
+            animation: pulseGlow 1.5s infinite;
+        }
+        
+        .tournament-card.status-upcoming::before {
+            background: var(--neon-yellow);
+        }
+        
+        .tournament-card.status-finished::before {
+            background: var(--gray-medium);
+        }
+        
+        .tournament-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .tournament-title {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .tournament-game {
+            font-size: 0.85rem;
+            color: var(--neon-cyan);
+        }
+        
+        .tournament-status {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--radius-sm);
+        }
+        
+        .status-active {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+        }
+        
+        .status-upcoming {
+            background: rgba(255, 238, 0, 0.2);
+            color: var(--neon-yellow);
+            border: 1px solid var(--neon-yellow);
+        }
+        
+        .status-finished {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-medium);
+            border: 1px solid var(--gray-medium);
+        }
+        
+        .tournament-description {
+            color: var(--off-white);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .tournament-meta {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--gray);
+            border-radius: var(--radius-md);
+        }
+        
+        .meta-box {
+            text-align: center;
+        }
+        
+        .meta-box .meta-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-medium);
+            margin-bottom: 0.3rem;
+        }
+        
+        .meta-box .meta-value {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+        
+        .meta-box .meta-value.prize {
+            color: var(--neon-yellow);
+        }
+        
+        .tournament-prizes {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .prize-item {
+            flex: 1;
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .prize-position {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--gray-medium);
+            margin-bottom: 0.3rem;
+        }
+        
+        .prize-amount {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--neon-yellow);
+        }
+        
+        .prize-amount.first {
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 238, 0, 0.5);
+        }
+        
+        .tournament-rules {
+            margin-bottom: 1.5rem;
+        }
+        
+        .tournament-rules h4 {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            margin-bottom: 0.8rem;
+        }
+        
+        .rules-list {
+            list-style: none;
+        }
+        
+        .rules-list li {
+            font-size: 0.9rem;
+            color: var(--off-white);
+            padding: 0.4rem 0;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+        
+        .rules-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--neon-green);
+            font-family: var(--font-mono);
+        }
+        
+        .tournament-participants {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .participants-avatars {
+            display: flex;
+        }
+        
+        .participants-avatars img {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--dark);
+            margin-left: -8px;
+        }
+        
+        .participants-avatars img:first-child {
+            margin-left: 0;
+        }
+        
+        .participants-count {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--gray-medium);
+        }
+        
+        .participants-count span {
+            color: var(--neon-green);
+        }
+        
+        .tournament-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .tournament-actions .btn {
+            flex: 1;
+        }
+        
+        .btn-register {
+            background: var(--neon-pink);
+            color: var(--white);
+            box-shadow: var(--glow-pink);
+        }
+        
+        .btn-register:hover {
+            background: #cc0052;
+        }
+        
+        .btn-registered {
+            background: var(--gray);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+        }
+        
+        /* Bracket Section */
+        .bracket-section {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .bracket-title {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .bracket-title::before {
+            content: '##';
+            color: var(--gray-medium);
+        }
+        
+        .bracket-rounds {
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        
+        .bracket-round {
+            min-width: 200px;
+        }
+        
+        .round-title {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--neon-green);
+            margin-bottom: 1rem;
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--gray);
+            border-radius: var(--radius-sm);
+        }
+        
+        .bracket-match {
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .match-player {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0;
+            font-size: 0.85rem;
+        }
+        
+        .match-player.winner {
+            color: var(--neon-green);
+        }
+        
+        .match-score {
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--dark);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+        }
+        
+        .leaderboard-title {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--neon-yellow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            background: var(--gray);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem;
+        }
+        
+        .leaderboard-item:first-child {
+            border-color: var(--neon-yellow);
+            background: rgba(255, 238, 0, 0.05);
+        }
+        
+        .leaderboard-position {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            min-width: 40px;
+        }
+        
+        .leaderboard-player {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .leaderboard-player img {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .leaderboard-time {
+            font-family: var(--font-mono);
+            color: var(--neon-green);
+        }
+        
+        @media (max-width: 768px) {
+            .tournament-meta {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tournament-prizes {
+                flex-direction: column;
+            }
+            
+            .tournament-actions {
+                flex-direction: column;
+            }
+            
+            .bracket-rounds {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body data-page="campeonatos">
+    <div class="ascii-bg" id="asciiBg"></div>
+    <div class="circuit-pattern"></div>
+    <div class="retro-scanline"></div>
+    
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html" class="active">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                    <li><a href="perfil.html">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="tournaments-header">
+            <h1>Campeonatos</h1>
+            <p style="color: var(--off-white); margin-top: 0.5rem;">Compite contra otros jugadores y gana premios reales.</p>
+            <div class="tournaments-stats">
+                <div class="t-stat">Activos: <span id="activeCount">0</span></div>
+                <div class="t-stat">Próximos: <span id="upcomingCount">0</span></div>
+                <div class="t-stat">Premios totales: <span id="totalPrizes">€0</span></div>
+            </div>
+        </div>
+
+        <div id="tournaments-container"></div>
+        
+        <!-- Bracket de ejemplo -->
+        <div class="bracket-section" id="bracket-section" style="display: none;">
+            <h3 class="bracket-title">Bracket del Torneo</h3>
+            <div class="bracket-rounds" id="bracket-rounds"></div>
+        </div>
+        
+        <!-- Leaderboard de speedrun -->
+        <div class="leaderboard" id="leaderboard-section" style="display: none;">
+            <h3 class="leaderboard-title">🏆 Leaderboard</h3>
+            <div id="leaderboard-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        async function initTournaments() {
+            const { data: tournaments, error } = await SupabaseApp.Tournaments.getAll();
+            if (error || !tournaments || tournaments.length === 0) {
+                document.getElementById('tournaments-container').innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:3rem;">No hay torneos disponibles.</p>';
+                return;
+            }
+
+            const container = document.getElementById('tournaments-container');
+            
+            const active = tournaments.filter(t => t.status === 'active').length;
+            const upcoming = tournaments.filter(t => t.status === 'upcoming').length;
+            const totalPrizes = tournaments.reduce((sum, t) => sum + Number(t.prize_pool || 0), 0);
+            
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('upcomingCount').textContent = upcoming;
+            document.getElementById('totalPrizes').textContent = '€' + totalPrizes;
+
+            const prizesOf = (t) => {
+                if (!t.prizes) return [];
+                try { return typeof t.prizes === 'string' ? JSON.parse(t.prizes) : t.prizes; } catch { return []; }
+            };
+            const rulesOf = (t) => t.rules || [];
+            const gameName = (t) => t.games?.title || t.title;
+
+            container.innerHTML = tournaments.map(tournament => {
+                const prizes = prizesOf(tournament);
+                const rules = rulesOf(tournament);
+                const gName = gameName(tournament);
+                const startStr = tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+                
+                return `
+                <div class="tournament-card status-${tournament.status}">
+                    <div class="tournament-header">
+                        <div>
+                            <h3 class="tournament-title">${tournament.title}</h3>
+                            <p class="tournament-game">🎮 ${gName}</p>
+                        </div>
+                        <span class="tournament-status status-${tournament.status}">
+                            ${tournament.status === 'active' ? '● EN VIVO' : 
+                              tournament.status === 'upcoming' ? '○ PROXIMAMENTE' : '○ FINALIZADO'}
+                        </span>
+                    </div>
+                    
+                    <p class="tournament-description">${tournament.description || ''}</p>
+                    
+                    <div class="tournament-meta">
+                        <div class="meta-box">
+                            <div class="meta-label">Formato</div>
+                            <div class="meta-value">${tournament.format || ''}</div>
+                        </div>
+                        <div class="meta-box">
+                            <div class="meta-label">Participantes</div>
+                            <div class="meta-value">${tournament.current_participants || 0}/${tournament.max_participants || 0}</div>
+                        </div>
+                        <div class="meta-box">
+                            <div class="meta-label">Premio Total</div>
+                            <div class="meta-value prize">€${tournament.prize_pool || 0}</div>
+                        </div>
+                        <div class="meta-box">
+                            <div class="meta-label">Inicio</div>
+                            <div class="meta-value">${startStr}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tournament-prizes">
+                        ${prizes.map(prize => `
+                            <div class="prize-item">
+                                <div class="prize-position">${prize.title}</div>
+                                <div class="prize-amount ${prize.position === 1 ? 'first' : ''}">€${prize.amount}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="tournament-rules">
+                        <h4>Reglas</h4>
+                        <ul class="rules-list">
+                            ${rules.map(rule => `<li>${rule}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="tournament-actions">
+                        ${tournament.status === 'active' ? 
+                            `<button class="btn btn-registered">✓ En curso</button>
+                             <button class="btn btn-primary">Ver Bracket</button>` :
+                          tournament.status === 'upcoming' ?
+                            `<button class="btn btn-register" onclick="registerTournament(${tournament.id})">Inscribirse</button>
+                             <button class="btn btn-secondary">Mas Info</button>` :
+                            `<button class="btn btn-secondary">Ver Resultados</button>`
+                        }
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        async function registerTournament(id) {
+            const user = AuthManager.getCurrentUser();
+            if (!user) {
+                showNotification('Inicia sesion para participar', 'info');
+                return;
+            }
+            const { error } = await SupabaseApp.Tournaments.join(user.id, id);
+            if (error) {
+                showNotification('Ya estas inscrito o hubo un error', 'info');
+            } else {
+                showNotification('Inscripcion confirmada! Good luck, gamer.', 'success');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', initTournaments);
+        
+        // Matrix Rain
+        function createMatrixRain() {
+            const container = document.getElementById('asciiBg');
+            if (!container) return;
+            const chars = '01アイウエオカキクケコ';
+            const columns = Math.floor(window.innerWidth / 20);
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'ascii-column';
+                column.style.left = (i * 20) + 'px';
+                column.style.animationDuration = (5 + Math.random() * 10) + 's';
+                column.style.animationDelay = (Math.random() * 5) + 's';
+                let text = '';
+                for (let j = 0; j < 15; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '\n';
+                }
+                column.textContent = text;
+                container.appendChild(column);
+            }
+        }
+        createMatrixRain();
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Mi Perfil</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="perfil">
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                    <li><a href="perfil.html" class="active">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="page-title">Mi Perfil</h1>
+
+        <div class="profile-section">
+            <div class="profile-header" id="profile-header"></div>
+            <div class="stats" id="user-stats"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Biblioteca</h3>
+            <div class="games-grid" id="owned-games"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Lista de Deseos</h3>
+            <div class="games-grid" id="wishlist-games"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Historial</h3>
+            <div id="purchase-history"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Logros</h3>
+            <div id="achievements"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Leaderboard Global</h3>
+            <div id="global-leaderboard" class="leaderboard-container"></div>
+        </div>
+
+        <div class="profile-section">
+            <h3 class="section-title">Amigos</h3>
+            <div class="friends-list" id="friends-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthManager.getCurrentUser();
+            const friendsList = document.getElementById('friends-list');
+            if (friendsList && user && user.friends) {
+                friendsList.innerHTML = user.friends.map(friend => `
+                    <div class="friend-item">
+                        <div class="friend-avatar">
+                            <img src="${friend.avatar}" alt="${friend.displayName}">
+                            <span class="status-indicator ${friend.online ? 'online' : 'offline'}"></span>
+                        </div>
+                        <div class="friend-info">
+                            <h4>${friend.displayName}</h4>
+                            <p class="friend-username">@${friend.username}</p>
+                            <p class="friend-status">${friend.online ? 'Online' : 'Offline'}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        });
+    </script>
+</body>
+</html>
