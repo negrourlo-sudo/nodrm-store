@@ -132,6 +132,35 @@ const Games = {
         if (!game) return 0;
         if (game.discount > 0) return game.price * (1 - game.discount / 100);
         return game.price;
+    },
+
+    async create(gameData) {
+        const { data, error } = await sb.from('games').insert(gameData).select().single();
+        return { data, error };
+    },
+
+    async addGenres(gameId, genreIds) {
+        const rows = genreIds.map(gid => ({ game_id: gameId, genre_id: gid }));
+        const { error } = await sb.from('game_genres').insert(rows);
+        return { error };
+    },
+
+    async addPlatforms(gameId, platformIds) {
+        const rows = platformIds.map(pid => ({ game_id: gameId, platform_id: pid }));
+        const { error } = await sb.from('game_platforms').insert(rows);
+        return { error };
+    },
+
+    async getBySeller(sellerId) {
+        const { data, error } = await sb.from('games').select('*').eq('seller_id', sellerId).order('created_at', { ascending: false });
+        return { data, error };
+    },
+
+    async getSellerRevenue(sellerId) {
+        const { data, error } = await sb.from('purchase_items')
+            .select('price, purchase_history!inner(user_id)')
+            .in('game_id', (await sb.from('games').select('id').eq('seller_id', sellerId)).data?.map(g => g.id) || []);
+        return { data, error };
     }
 };
 
@@ -365,7 +394,19 @@ const Purchases = {
         const { error: e2 } = await sb.from('purchase_items').insert(purchaseItems);
         if (e2) return { data: null, error: e2 };
 
-        for (const item of items) await Library.add(userId, item.gameId);
+        for (const item of items) {
+            await Library.add(userId, item.gameId);
+
+            const { data: game } = await sb.from('games').select('seller_id').eq('id', item.gameId).single();
+            if (game?.seller_id && game.seller_id !== userId) {
+                const { data: buyer } = await sb.from('profiles').select('wallet_balance').eq('id', userId).single();
+                const { data: seller } = await sb.from('profiles').select('wallet_balance').eq('id', game.seller_id).single();
+                if (buyer && seller) {
+                    await sb.from('profiles').update({ wallet_balance: Number(buyer.wallet_balance) - Number(item.price) }).eq('id', userId);
+                    await sb.from('profiles').update({ wallet_balance: Number(seller.wallet_balance) + Number(item.price) }).eq('id', game.seller_id);
+                }
+            }
+        }
 
         return { data: purchase, error: null };
     },
@@ -381,22 +422,29 @@ const Purchases = {
 // ============================================
 const Leaderboard = {
     async getGlobal() {
-        const { data, error } = await sb.rpc('get_leaderboard');
-        if (error) {
-            const { data: fallback, error: e2 } = await sb.from('user_achievements')
-                .select('user_id, profiles(id, username, display_name, avatar_url), achievements(points)')
-                .limit(500);
-            if (e2) return { data: [], error: e2 };
-            const scores = {};
-            for (const row of (fallback || [])) {
-                const uid = row.user_id;
-                if (!scores[uid]) scores[uid] = { user_id: uid, profiles: row.profiles, total_points: 0 };
-                scores[uid].total_points += row.achievements?.points || 0;
-            }
-            const sorted = Object.values(scores).sort((a, b) => b.total_points - a.total_points).slice(0, 20);
-            return { data: sorted, error: null };
+        const { data: games, error: ge } = await sb.from('games').select('id, seller_id');
+        if (ge || !games || games.length === 0) return { data: [], error: ge };
+
+        const sellerIds = [...new Set(games.map(g => g.seller_id).filter(Boolean))];
+        if (sellerIds.length === 0) return { data: [], error: null };
+
+        const { data: sellers, error: se } = await sb.from('profiles').select('id, username, display_name, avatar_url').in('id', sellerIds);
+        if (se) return { data: [], error: se };
+
+        const results = [];
+        for (const seller of (sellers || [])) {
+            const sellerGames = games.filter(g => g.seller_id === seller.id);
+            const { count } = await sb.from('purchase_items').select('*', { count: 'exact', head: true }).in('game_id', sellerGames.map(g => g.id));
+            const { count: gameCount } = await sb.from('games').select('*', { count: 'exact', head: true }).eq('seller_id', seller.id);
+            results.push({
+                ...seller,
+                total_sales: count || 0,
+                total_games: gameCount || 0
+            });
         }
-        return { data: (data || []).slice(0, 20), error: null };
+
+        results.sort((a, b) => b.total_sales - a.total_sales);
+        return { data: results.slice(0, 20), error: null };
     },
 
     async getByContest(contestId) {
@@ -410,6 +458,26 @@ const Leaderboard = {
 };
 
 // ============================================
+// STORAGE
+// ============================================
+const Storage = {
+    async uploadCover(userId, file) {
+        const ext = file.name.split('.').pop();
+        const path = `${userId}/${Date.now()}.${ext}`;
+        const { data, error } = await sb.storage.from('game-covers').upload(path, file, { upsert: true });
+        if (error) return { data: null, error };
+        const { data: urlData } = sb.storage.from('game-covers').getPublicUrl(path);
+        return { data: { path, url: urlData.publicUrl }, error: null };
+    },
+
+    getCoverUrl(path) {
+        if (!path) return null;
+        const { data } = sb.storage.from('game-covers').getPublicUrl(path);
+        return data?.publicUrl || null;
+    }
+};
+
+// ============================================
 // GLOBAL APP OBJECT
 // ============================================
-const SupabaseApp = { sb, Auth, Profiles, Games, Library, Wishlist, Cart, Reviews, Tournaments, Contests, Leaderboard, Friends, Achievements, Purchases };
+const SupabaseApp = { sb, Auth, Profiles, Games, Library, Wishlist, Cart, Reviews, Tournaments, Contests, Leaderboard, Friends, Achievements, Purchases, Storage };

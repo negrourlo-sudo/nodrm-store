@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Subir Juego</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .upload-form { max-width: 700px; margin: 0 auto; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .cover-upload {
+            border: 2px dashed var(--gray-light); border-radius: var(--radius-md);
+            padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .cover-upload:hover { border-color: var(--neon-green); }
+        .cover-upload.has-image { padding: 0; border-style: solid; }
+        .cover-upload img { width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md); }
+        .cover-upload input { display: none; }
+        .genre-grid, .platform-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .chip {
+            padding: 0.4rem 0.8rem; border: 1px solid var(--gray-light); border-radius: 20px;
+            font-size: 0.8rem; cursor: pointer; transition: all 0.2s; font-family: var(--font-mono);
+        }
+        .chip:hover { border-color: var(--neon-cyan); }
+        .chip.selected { background: var(--neon-green); color: var(--black); border-color: var(--neon-green); }
+        .price-input { position: relative; }
+        .price-input::before { content: '€'; position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--neon-green); font-family: var(--font-mono); font-weight: 700; }
+        .price-input input { padding-left: 2rem; }
+        .form-group label .required { color: var(--neon-pink); }
+        .terms-check { display: flex; align-items: flex-start; gap: 0.8rem; padding: 1rem; background: var(--gray); border-radius: var(--radius-md); margin-top: 1rem; }
+        .terms-check input { margin-top: 0.3rem; accent-color: var(--neon-green); }
+        .terms-check label { font-size: 0.85rem; color: var(--gray-medium); cursor: pointer; }
+        .terms-check label a { color: var(--neon-cyan); }
+    </style>
+</head>
+<body data-page="subir-juego">
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="subir-juego.html" class="active">Subir Juego</a></li>
+                    <li><a href="perfil.html">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="page-title">Subir Juego</h1>
+        <p style="text-align:center;color:var(--gray-medium);margin-bottom:2rem;font-family:var(--font-mono);font-size:0.9rem;">
+            Comparte tus demos y juegos gratuitos con la comunidad
+        </p>
+
+        <div class="upload-form">
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="title">Título <span class="required">*</span></label>
+                    <input type="text" id="title" placeholder="Nombre de tu juego" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descripción <span class="required">*</span></label>
+                    <textarea id="description" rows="4" placeholder="Describe tu juego..." required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="developer">Desarrollador <span class="required">*</span></label>
+                        <input type="text" id="developer" placeholder="Tu nombre o estudio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="publisher">Editor</label>
+                        <input type="text" id="publisher" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group price-input">
+                        <label for="price">Precio (€) <span class="required">*</span></label>
+                        <input type="number" id="price" min="0" step="0.01" value="0" placeholder="0 para gratis" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="releaseDate">Fecha de lanzamiento</label>
+                        <input type="date" id="releaseDate">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ageRating">Clasificación por edad</label>
+                        <select id="ageRating" class="form-select" style="width:100%;">
+                            <option value="">Sin clasificar</option>
+                            <option value="3+">3+</option>
+                            <option value="7+">7+</option>
+                            <option value="12+">12+</option>
+                            <option value="16+">16+</option>
+                            <option value="18+">18+</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount">Descuento (%)</label>
+                        <input type="number" id="discount" min="0" max="100" value="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Portada <span class="required">*</span></label>
+                    <div class="cover-upload" id="coverUpload" onclick="document.getElementById('coverFile').click()">
+                        <input type="file" id="coverFile" accept="image/*" required>
+                        <div id="coverPlaceholder">
+                            <div style="font-size:2rem;margin-bottom:0.5rem;">📁</div>
+                            <p style="color:var(--gray-medium);">Haz clic para subir una imagen</p>
+                            <p style="color:var(--gray-medium);font-size:0.75rem;">JPG, PNG, WebP — Máx 5MB</p>
+                        </div>
+                        <img id="coverPreview" style="display:none;" alt="Portada">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Géneros <span class="required">*</span></label>
+                    <div class="genre-grid" id="genreGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Plataformas <span class="required">*</span></label>
+                    <div class="platform-grid" id="platformGrid"></div>
+                </div>
+
+                <div class="terms-check">
+                    <input type="checkbox" id="acceptTerms" required>
+                    <label for="acceptTerms">
+                        Acepto los <a href="pagina-politicas.html" target="_blank">términos y condiciones</a> y la <a href="pagina-politicas.html#dmca" target="_blank">política DMCA</a>. Confirmo que tengo derecho a distribuir este contenido.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1.5rem;padding:0.8rem;font-size:1rem;" id="submitBtn">
+                    🚀 Publicar Juego
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad. · <a href="pagina-politicas.html" style="color:var(--neon-cyan);text-decoration:none;">Términos y Políticas</a></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let selectedGenres = [];
+        let selectedPlatforms = [];
+        let coverFile = null;
+
+        async function initUploadForm() {
+            const user = AuthManager.getCurrentUser();
+            if (!user) {
+                showNotification('Inicia sesión para subir juegos', 'info');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                return;
+            }
+
+            const { data: genres } = await SupabaseApp.Games.getGenres();
+            const { data: platforms } = await SupabaseApp.sb.from('platforms').select('*').order('name');
+
+            const genreGrid = document.getElementById('genreGrid');
+            genreGrid.innerHTML = (genres || []).map(g => `
+                <div class="chip" data-id="${g.id}" onclick="toggleGenre(${g.id}, this)">${g.name}</div>
+            `).join('');
+
+            const platformGrid = document.getElementById('platformGrid');
+            platformGrid.innerHTML = (platforms || []).map(p => `
+                <div class="chip" data-id="${p.id}" onclick="togglePlatform(${p.id}, this)">${p.name}</div>
+            `).join('');
+        }
+
+        function toggleGenre(id, el) {
+            el.classList.toggle('selected');
+            if (selectedGenres.includes(id)) selectedGenres = selectedGenres.filter(g => g !== id);
+            else selectedGenres.push(id);
+        }
+
+        function togglePlatform(id, el) {
+            el.classList.toggle('selected');
+            if (selectedPlatforms.includes(id)) selectedPlatforms = selectedPlatforms.filter(p => p !== id);
+            else selectedPlatforms.push(id);
+        }
+
+        document.getElementById('coverFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede superar 5MB'); return; }
+            coverFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('coverPreview').src = ev.target.result;
+                document.getElementById('coverPreview').style.display = 'block';
+                document.getElementById('coverPlaceholder').style.display = 'none';
+                document.getElementById('coverUpload').classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const user = AuthManager.getCurrentUser();
+            if (!user) { showNotification('Inicia sesión', 'info'); return; }
+
+            if (selectedGenres.length === 0) { showNotification('Selecciona al menos un género', 'error'); return; }
+            if (selectedPlatforms.length === 0) { showNotification('Selecciona al menos una plataforma', 'error'); return; }
+            if (!coverFile) { showNotification('Sube una portada', 'error'); return; }
+
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = 'Subiendo...';
+            btn.disabled = true;
+
+            const { data: coverData, error: coverErr } = await SupabaseApp.Storage.uploadCover(user.id, coverFile);
+            if (coverErr) { showNotification('Error al subir portada', 'error'); btn.textContent = '🚀 Publicar Juego'; btn.disabled = false; return; }
+
+            const slug = document.getElementById('title').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const gameData = {
+                title: document.getElementById('title').value,
+                slug: slug + '-' + Date.now(),
+                description: document.getElementById('description').value,
+                developer: document.getElementById('developer').value,
+                publisher: document.getElementById('publisher').value || null,
+                price: parseFloat(document.getElementById('price').value) || 0,
+                original_price: parseFloat(document.getElementById('price').value) || 0,
+                discount: parseInt(document.getElementById('discount').value) || 0,
+                cover_image: coverData.url,
+                release_date: document.getElementById('releaseDate').value || null,
+                age_rating: document.getElementById('ageRating').value || null,
+                seller_id: user.id,
+                is_new: true,
+                is_featured: false,
+                rating: 0,
+                reviews_count: 0
+            };
+
+            const { data: game, error: gameErr } = await SupabaseApp.Games.create(gameData);
+            if (gameErr) { showNotification('Error al crear juego: ' + gameErr.message, 'error'); btn.textContent = '🚀 Publicar Juego'; btn.disabled = false; return; }
+
+            await SupabaseApp.Games.addGenres(game.id, selectedGenres);
+            await SupabaseApp.Games.addPlatforms(game.id, selectedPlatforms);
+
+            showNotification('¡Juego publicado con éxito!', 'success');
+            setTimeout(() => window.location.href = 'perfil.html', 1500);
+        });
+
+        document.addEventListener('DOMContentLoaded', initUploadForm);
+    </script>
+</body>
+</html>

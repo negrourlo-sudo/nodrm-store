@@ -371,6 +371,7 @@ async function initPerfilPage() {
     await renderUserStats(p);
     await renderOwnedGames();
     await renderWishlist();
+    await renderMyGames();
     await renderPurchaseHistory();
     await renderAchievements();
     await renderGlobalLeaderboard();
@@ -434,6 +435,30 @@ async function renderWishlist() {
     }
 }
 
+async function renderMyGames() {
+    const c = document.getElementById('my-games');
+    if (!c) return;
+    const { data: games } = await SupabaseApp.Games.getBySeller(currentUser.id);
+    if (!games || games.length === 0) {
+        c.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Aún no has publicado ningún juego. <a href="subir-juego.html" style="color: var(--neon-green);">Sube tu primer juego</a></p>';
+    } else {
+        c.innerHTML = '<div class="games-grid">' + games.map(g => `
+            <div class="game-card">
+                <img src="${g.cover_image || 'https://via.placeholder.com/300x200?text=Sin+Portada'}" alt="${g.title}">
+                <div class="game-info">
+                    <h4>${g.title}</h4>
+                    <p class="game-dev">${g.developer || ''}</p>
+                    <div class="game-price">${g.price > 0 ? '€' + g.price : 'Gratis'}</div>
+                    <div style="font-size:0.75rem;color:var(--gray-medium);margin-top:0.3rem;">
+                        ${g.discount > 0 ? '<span style="color:var(--neon-pink);">-' + g.discount + '%</span>' : ''}
+                        ${g.is_new ? '<span style="color:var(--neon-cyan);">Nuevo</span>' : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('') + '</div>';
+    }
+}
+
 async function renderPurchaseHistory() {
     const c = document.getElementById('purchase-history');
     if (!c) return;
@@ -481,21 +506,20 @@ async function renderGlobalLeaderboard() {
     if (!c) return;
     const { data, error } = await SupabaseApp.Leaderboard.getGlobal();
     if (error || !data || data.length === 0) {
-        c.innerHTML = '<div class="leaderboard-empty">No hay datos de leaderboard aun.</div>';
+        c.innerHTML = '<div class="leaderboard-empty">No hay creadores en el leaderboard aún.</div>';
         return;
     }
     c.innerHTML = `
         <div class="leaderboard-header">
             <span>#</span>
-            <span>Jugador</span>
-            <span style="text-align:right">Puntos</span>
+            <span>Creador</span>
+            <span style="text-align:right">Ventas</span>
         </div>
         ${data.map((entry, i) => {
             const pos = i + 1;
-            const p = entry.profiles;
-            const name = p?.display_name || p?.username || 'Jugador';
-            const username = p?.username || '';
-            const avatar = p?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+            const name = entry.display_name || entry.username || 'Creador';
+            const username = entry.username || '';
+            const avatar = entry.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
             const topClass = pos <= 3 ? `top-${pos}` : '';
             return `
             <div class="leaderboard-entry ${topClass}">
@@ -504,10 +528,10 @@ async function renderGlobalLeaderboard() {
                     <img src="${avatar}" alt="${name}">
                     <div>
                         <div class="leaderboard-player-name">${name}</div>
-                        <div class="leaderboard-player-username">@${username}</div>
+                        <div class="leaderboard-player-username">@${username} · ${entry.total_games} juego${entry.total_games !== 1 ? 's' : ''}</div>
                     </div>
                 </div>
-                <div class="leaderboard-score">${entry.total_points} pts</div>
+                <div class="leaderboard-score">${entry.total_sales} venta${entry.total_sales !== 1 ? 's' : ''}</div>
             </div>
             `;
         }).join('')}
