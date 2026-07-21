@@ -147,10 +147,31 @@
         <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
     </footer>
 
-    <script src="data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
-    <script src="data.js"></script>
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const changePassBtn = document.querySelector('.config-section:nth-child(6) .btn-secondary');
+            if (changePassBtn) {
+                changePassBtn.addEventListener('click', async () => {
+                    const user = AuthManager.getCurrentUser();
+                    if (!user) { showNotification('Inicia sesión primero', 'info'); return; }
+                    const { error } = await SupabaseApp.Auth.resetPassword(user.email);
+                    if (error) { showNotification('Error al enviar correo', 'error'); return; }
+                    showNotification('Correo de cambio de contraseña enviado', 'success');
+                });
+            }
+
+            const deleteBtn = document.querySelector('.btn-danger');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (!confirm('¿Estás seguro? Esta acción es irreversible. Se eliminarán todos tus datos.')) return;
+                    if (!confirm('ÚLTIMA ADVERTENCIA: ¿Eliminar mi cuenta permanentemente?')) return;
+                    showNotification('Para eliminar tu cuenta, contacta a soporte', 'info');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

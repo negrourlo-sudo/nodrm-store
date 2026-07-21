@@ -66,30 +66,38 @@
         <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
     </footer>
 
-    <script src="data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
-    <script src="data.js"></script>
     <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const user = AuthManager.getCurrentUser();
             const friendsList = document.getElementById('friends-list');
-            if (friendsList && user && user.friends) {
-                friendsList.innerHTML = user.friends.map(friend => `
+            if (!friendsList || !user) return;
+
+            const { data: friends } = await SupabaseApp.Friends.getFriends(user.id);
+            if (!friends || friends.length === 0) {
+                friendsList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No tienes amigos aún.</p>';
+                return;
+            }
+
+            friendsList.innerHTML = friends.map(f => {
+                const p = f.profiles;
+                const name = p?.display_name || p?.username || 'Amigo';
+                const username = p?.username || '';
+                const avatar = p?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
+                return `
                     <div class="friend-item">
                         <div class="friend-avatar">
-                            <img src="${friend.avatar}" alt="${friend.displayName}">
-                            <span class="status-indicator ${friend.online ? 'online' : 'offline'}"></span>
+                            <img src="${avatar}" alt="${name}">
                         </div>
                         <div class="friend-info">
-                            <h4>${friend.displayName}</h4>
-                            <p class="friend-username">@${friend.username}</p>
-                            <p class="friend-status">${friend.online ? 'Online' : 'Offline'}</p>
+                            <h4>${name}</h4>
+                            <p class="friend-username">@${username}</p>
                         </div>
                     </div>
-                `).join('');
-            }
+                `;
+            }).join('');
         });
     </script>
 </body>

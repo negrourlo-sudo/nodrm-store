@@ -549,19 +549,23 @@ function renderAccountSettings(p) {
 function renderNotificationSettings(p) {
     const c = document.getElementById('notification-settings');
     if (!c) return;
+    const saved = JSON.parse(localStorage.getItem('nodrm_settings') || '{}');
+    const s = saved.notifications || {};
     c.innerHTML = `
-        <div class="config-row"><div class="config-label"><h4>Notificaciones por email</h4><p>Recibe actualizaciones importantes</p></div><label class="toggle"><input type="checkbox" id="emailNotifications" checked><span class="slider"></span></label></div>
-        <div class="config-row"><div class="config-label"><h4>Notificaciones push</h4><p>Recibe notificaciones en tu navegador</p></div><label class="toggle"><input type="checkbox" id="pushNotifications" checked><span class="slider"></span></label></div>
-        <div class="config-row"><div class="config-label"><h4>Newsletter</h4><p>Recibe ofertas y novedades</p></div><label class="toggle"><input type="checkbox" id="newsletter" checked><span class="slider"></span></label></div>
+        <div class="config-row"><div class="config-label"><h4>Notificaciones por email</h4><p>Recibe actualizaciones importantes</p></div><label class="toggle"><input type="checkbox" id="emailNotifications" ${s.email !== false ? 'checked' : ''}><span class="slider"></span></label></div>
+        <div class="config-row"><div class="config-label"><h4>Notificaciones push</h4><p>Recibe notificaciones en tu navegador</p></div><label class="toggle"><input type="checkbox" id="pushNotifications" ${s.push !== false ? 'checked' : ''}><span class="slider"></span></label></div>
+        <div class="config-row"><div class="config-label"><h4>Newsletter</h4><p>Recibe ofertas y novedades</p></div><label class="toggle"><input type="checkbox" id="newsletter" ${s.newsletter !== false ? 'checked' : ''}><span class="slider"></span></label></div>
     `;
 }
 
 function renderPrivacySettings(p) {
     const c = document.getElementById('privacy-settings');
     if (!c) return;
+    const saved = JSON.parse(localStorage.getItem('nodrm_settings') || '{}');
+    const s = saved.privacy || {};
     c.innerHTML = `
-        <div class="config-row"><div class="config-label"><h4>Perfil publico</h4><p>Permite que otros vean tu perfil</p></div><label class="toggle"><input type="checkbox" id="profilePublic" checked><span class="slider"></span></label></div>
-        <div class="config-row"><div class="config-label"><h4>Mostrar estado en linea</h4><p>Permite que otros vean cuando estas conectado</p></div><label class="toggle"><input type="checkbox" id="showOnlineStatus" checked><span class="slider"></span></label></div>
+        <div class="config-row"><div class="config-label"><h4>Perfil publico</h4><p>Permite que otros vean tu perfil</p></div><label class="toggle"><input type="checkbox" id="profilePublic" ${s.profilePublic !== false ? 'checked' : ''}><span class="slider"></span></label></div>
+        <div class="config-row"><div class="config-label"><h4>Mostrar estado en linea</h4><p>Permite que otros vean cuando estas conectado</p></div><label class="toggle"><input type="checkbox" id="showOnlineStatus" ${s.showOnline !== false ? 'checked' : ''}><span class="slider"></span></label></div>
     `;
 }
 
@@ -585,6 +589,13 @@ function setupFormHandlers() {
     const saveNotif = document.getElementById('save-notifications');
     if (saveNotif) {
         saveNotif.addEventListener('click', () => {
+            const settings = JSON.parse(localStorage.getItem('nodrm_settings') || '{}');
+            settings.notifications = {
+                email: document.getElementById('emailNotifications')?.checked,
+                push: document.getElementById('pushNotifications')?.checked,
+                newsletter: document.getElementById('newsletter')?.checked
+            };
+            localStorage.setItem('nodrm_settings', JSON.stringify(settings));
             showNotification('Preferencias guardadas', 'success');
         });
     }
@@ -592,6 +603,12 @@ function setupFormHandlers() {
     const savePrivacy = document.getElementById('save-privacy');
     if (savePrivacy) {
         savePrivacy.addEventListener('click', () => {
+            const settings = JSON.parse(localStorage.getItem('nodrm_settings') || '{}');
+            settings.privacy = {
+                profilePublic: document.getElementById('profilePublic')?.checked,
+                showOnline: document.getElementById('showOnlineStatus')?.checked
+            };
+            localStorage.setItem('nodrm_settings', JSON.stringify(settings));
             showNotification('Privacidad guardada', 'success');
         });
     }

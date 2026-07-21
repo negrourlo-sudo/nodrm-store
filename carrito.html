@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Carrito</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .cart-container { max-width: 800px; margin: 0 auto; }
+        .cart-item {
+            display: flex; align-items: center; gap: 1rem;
+            background: var(--dark); border: 1px solid var(--gray-light);
+            padding: 1rem; border-radius: var(--radius-md); margin-bottom: 0.75rem;
+        }
+        .cart-item img { width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-sm); }
+        .cart-item-info { flex: 1; }
+        .cart-item-title { font-weight: 600; margin-bottom: 0.3rem; }
+        .cart-item-dev { font-size: 0.8rem; color: var(--gray-medium); }
+        .cart-item-price { font-family: var(--font-mono); font-weight: 700; color: var(--neon-green); font-size: 1.1rem; }
+        .cart-item-remove { background: none; border: 1px solid var(--gray-light); color: var(--neon-pink); cursor: pointer; padding: 0.5rem; border-radius: var(--radius-sm); transition: all 0.2s; }
+        .cart-item-remove:hover { border-color: var(--neon-pink); background: rgba(255,0,102,0.1); }
+        .cart-summary {
+            background: var(--dark); border: 1px solid var(--neon-green);
+            padding: 1.5rem; border-radius: var(--radius-md); margin-top: 1.5rem;
+        }
+        .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .cart-total-amount { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; color: var(--neon-green); text-shadow: var(--glow-green); }
+        .cart-empty { text-align: center; padding: 4rem 2rem; color: var(--gray-medium); }
+        .cart-empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body data-page="carrito">
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                    <li><a href="perfil.html">Perfil</a></li>
+                    <li><a href="configuracion.html">Config</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h1 class="page-title">Mi Carrito</h1>
+        <div class="cart-container" id="cart-container"></div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="script.js"></script>
+    <script>
+        async function initCart() {
+            const user = AuthManager.getCurrentUser();
+            const container = document.getElementById('cart-container');
+
+            if (!user) {
+                container.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">🔒</div><h3>Inicia sesión para ver tu carrito</h3><a href="login.html" class="btn btn-primary" style="margin-top:1rem;display:inline-block;">Entrar</a></div>';
+                return;
+            }
+
+            const { data: items } = await SupabaseApp.Cart.getUserCart(user.id);
+
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">🛒</div><h3>Tu carrito está vacío</h3><p style="color:var(--gray-medium);margin:0.5rem 0 1rem;">Explora nuestro catálogo y encuentra tu próximo juego DRM-free.</p><a href="catalogo.html" class="btn btn-primary" style="display:inline-block;">Ver Catálogo</a></div>';
+                return;
+            }
+
+            const total = items.reduce((sum, item) => sum + Number(item.games?.price || 0), 0);
+
+            container.innerHTML = `
+                <div class="cart-items">
+                    ${items.map(item => {
+                        const g = item.games;
+                        const price = g?.discount > 0 ? (g.price * (1 - g.discount / 100)).toFixed(2) : g?.price;
+                        return `
+                        <div class="cart-item" id="cart-item-${item.id}">
+                            <img src="${g?.cover_image || ''}" alt="${g?.title || ''}">
+                            <div class="cart-item-info">
+                                <div class="cart-item-title">${g?.title || 'Juego'}</div>
+                                <div class="cart-item-dev">${g?.developer || ''}</div>
+                            </div>
+                            <div class="cart-item-price">€${price}</div>
+                            <button class="cart-item-remove" onclick="removeItem('${item.id}', ${item.game_id})" title="Eliminar">✕</button>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="cart-summary">
+                    <div class="cart-total">
+                        <span style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;font-size:0.85rem;color:var(--gray-medium);">Total</span>
+                        <span class="cart-total-amount">€${total.toFixed(2)}</span>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;font-size:1rem;padding:0.8rem;" onclick="checkout()">
+                        💳 Comprar (${items.length} juego${items.length > 1 ? 's' : ''})
+                    </button>
+                </div>
+            `;
+        }
+
+        async function removeItem(cartId, gameId) {
+            const user = AuthManager.getCurrentUser();
+            await SupabaseApp.Cart.remove(user.id, gameId);
+            document.getElementById('cart-item-' + cartId)?.remove();
+            updateCartBadge();
+            initCart();
+        }
+
+        async function checkout() {
+            const user = AuthManager.getCurrentUser();
+            if (!user) { showNotification('Inicia sesión para comprar', 'info'); return; }
+
+            const btn = document.querySelector('.cart-summary .btn-primary');
+            btn.textContent = 'Procesando...';
+            btn.disabled = true;
+
+            const { data: items } = await SupabaseApp.Cart.getUserCart(user.id);
+            if (!items || items.length === 0) { showNotification('El carrito está vacío', 'info'); return; }
+
+            const total = items.reduce((sum, item) => sum + Number(item.games?.price || 0), 0);
+            const purchaseItems = items.map(i => ({ gameId: i.game_id, price: i.games?.price || 0 }));
+
+            const { data, error } = await SupabaseApp.Purchases.create(user.id, purchaseItems, total);
+
+            if (error) {
+                showNotification('Error al procesar la compra', 'error');
+                btn.textContent = '💳 Comprar';
+                btn.disabled = false;
+                return;
+            }
+
+            await SupabaseApp.Cart.clear(user.id);
+            updateCartBadge();
+            showNotification('¡Compra realizada con éxito! Juegos añadidos a tu biblioteca.', 'success');
+            setTimeout(() => window.location.href = 'perfil.html', 1500);
+        }
+
+        document.addEventListener('DOMContentLoaded', initCart);
+    </script>
+</body>
+</html>
