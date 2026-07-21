@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Restablecer Contraseña</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="restablecer-contrasena">
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="auth-logo">🔑</span>
+                    <h1 class="auth-title">Restablecer Contraseña</h1>
+                    <p class="auth-subtitle">Ingresa tu nueva contraseña</p>
+                </div>
+
+                <div id="loading-state" style="text-align: center; padding: 2rem;">
+                    <div class="loading-bar" style="margin-bottom: 1rem;"></div>
+                    <p style="color: var(--gray-medium);">Verificando enlace...</p>
+                </div>
+
+                <form class="auth-form" id="newPasswordForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="password">Nueva contraseña</label>
+                        <input type="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar contraseña</label>
+                        <input type="password" id="confirmPassword" placeholder="Repite tu contraseña" required minlength="6">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;">
+                        Guardar nueva contraseña
+                    </button>
+
+                    <div class="auth-footer">
+                        <p><a href="login.html">← Volver al login</a></p>
+                    </div>
+                </form>
+
+                <div id="error-state" style="text-align: center; padding: 2rem; display: none;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                    <h3 style="color: var(--neon-pink); margin-bottom: 1rem;">Enlace no válido</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        El enlace de recuperación ha expirado o no es válido.
+                    </p>
+                    <a href="olvido-contrasena.html" class="btn btn-primary" style="display: inline-block; margin-top: 1.5rem;">
+                        Solicitar nuevo enlace
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+        (async function() {
+            const loadingEl = document.getElementById('loading-state');
+            const formEl = document.getElementById('newPasswordForm');
+            const errorEl = document.getElementById('error-state');
+
+            const hash = window.location.hash;
+            const params = new URLSearchParams(hash.substring(1));
+            const accessToken = params.get('access_token');
+            const type = params.get('type');
+
+            if (!accessToken || type !== 'recovery') {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const { data, error } = await SupabaseApp.sb.auth.setSession({
+                access_token: accessToken,
+                refresh_token: params.get('refresh_token') || ''
+            });
+
+            if (error) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            loadingEl.style.display = 'none';
+            formEl.style.display = 'block';
+        })();
+
+        document.getElementById('newPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (password !== confirm) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            btn.textContent = 'Guardando...';
+            btn.disabled = true;
+
+            const { data, error } = await SupabaseApp.Auth.updatePassword(password);
+
+            if (error) {
+                alert(error.message || 'Error al actualizar la contraseña');
+                btn.textContent = 'Guardar nueva contraseña';
+                btn.disabled = false;
+                return;
+            }
+
+            this.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                    <h3 style="color: var(--neon-green); margin-bottom: 1rem;">Contraseña actualizada</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Tu contraseña ha sido cambiada correctamente.
+                    </p>
+                    <a href="login.html" class="btn btn-primary" style="display: inline-block; margin-top: 1.5rem;">
+                        Iniciar sesión
+                    </a>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

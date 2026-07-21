@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoDRM - Recuperar Contraseña</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="olvido-contrasena">
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">NoDRM</a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Novedades</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="campeonatos.html">Campeonatos</a></li>
+                    <li><a href="concursos.html">Concursos</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="auth-logo">🔐</span>
+                    <h1 class="auth-title">Recuperar Contraseña</h1>
+                    <p class="auth-subtitle">Te enviaremos un enlace para restablecer tu contraseña</p>
+                </div>
+
+                <form class="auth-form" id="resetForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="tu@email.com" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;">
+                        Enviar enlace de recuperación
+                    </button>
+
+                    <div class="auth-footer">
+                        <p><a href="login.html">← Volver a iniciar sesión</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>NoDRM © 2026 — Tus juegos, tu libertad.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+        document.getElementById('resetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const email = document.getElementById('email').value;
+
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+
+            const { data, error } = await SupabaseApp.Auth.resetPassword(email);
+
+            if (error) {
+                alert(error.message || 'Error al enviar el correo. Verifica tu email.');
+                btn.textContent = 'Enviar enlace de recuperación';
+                btn.disabled = false;
+                return;
+            }
+
+            this.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✉️</div>
+                    <h3 style="color: var(--neon-green); margin-bottom: 1rem;">Correo enviado</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Revisa tu bandeja de entrada y haz clic en el enlace para restablecer tu contraseña.
+                    </p>
+                    <p style="color: var(--gray-medium); font-size: 0.85rem; margin-top: 1rem;">
+                        ¿No lo ves? Revisa la carpeta de spam.
+                    </p>
+                    <a href="login.html" class="btn btn-primary" style="display: inline-block; margin-top: 1.5rem;">
+                        Volver al login
+                    </a>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
