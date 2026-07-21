@@ -111,6 +111,7 @@
 
                 <div class="form-group">
                     <label>Portada <span class="required">*</span></label>
+                    <p style="font-size:0.75rem;color:var(--gray-medium);margin-bottom:0.5rem;font-family:var(--font-mono);">Resolución recomendada: 600×400px (ratio 3:2). Se redimensionará automáticamente.</p>
                     <div class="cover-upload" id="coverUpload" onclick="document.getElementById('coverFile').click()">
                         <input type="file" id="coverFile" accept="image/*" required>
                         <div id="coverPlaceholder">
@@ -158,6 +159,44 @@
         let selectedPlatforms = [];
         let coverFile = null;
 
+        function resizeImage(file, maxWidth, maxHeight) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width;
+                        let h = img.height;
+                        const targetRatio = maxWidth / maxHeight;
+                        const currentRatio = w / h;
+
+                        if (currentRatio > targetRatio) {
+                            h = maxHeight;
+                            w = h * targetRatio;
+                        } else {
+                            w = maxWidth;
+                            h = w / targetRatio;
+                        }
+
+                        canvas.width = maxWidth;
+                        canvas.height = maxHeight;
+                        const ctx = canvas.getContext('2d');
+                        const offsetX = (img.width - (currentRatio > targetRatio ? w : img.width * (targetRatio / currentRatio))) / 2;
+                        const offsetY = (img.height - (currentRatio > targetRatio ? img.height * (currentRatio / targetRatio) : h)) / 2;
+
+                        ctx.drawImage(img, -offsetX, -offsetY, img.width, img.height);
+
+                        canvas.toBlob(function(blob) {
+                            resolve(new File([blob], file.name, { type: 'image/jpeg', quality: 0.9 }));
+                        }, 'image/jpeg', 0.9);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function initUploadForm() {
             const user = AuthManager.getCurrentUser();
             if (!user) {
@@ -192,11 +231,14 @@
             else selectedPlatforms.push(id);
         }
 
-        document.getElementById('coverFile').addEventListener('change', function(e) {
+        document.getElementById('coverFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
             if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede superar 5MB'); return; }
-            coverFile = file;
+
+            showNotification('Procesando imagen...', 'info');
+            coverFile = await resizeImage(file, 600, 400);
+
             const reader = new FileReader();
             reader.onload = function(ev) {
                 document.getElementById('coverPreview').src = ev.target.result;
@@ -204,7 +246,7 @@
                 document.getElementById('coverPlaceholder').style.display = 'none';
                 document.getElementById('coverUpload').classList.add('has-image');
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(coverFile);
         });
 
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
