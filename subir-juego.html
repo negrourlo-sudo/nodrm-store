@@ -166,29 +166,30 @@
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        let w = img.width;
-                        let h = img.height;
-                        const targetRatio = maxWidth / maxHeight;
-                        const currentRatio = w / h;
-
-                        if (currentRatio > targetRatio) {
-                            h = maxHeight;
-                            w = h * targetRatio;
-                        } else {
-                            w = maxWidth;
-                            h = w / targetRatio;
-                        }
-
                         canvas.width = maxWidth;
                         canvas.height = maxHeight;
                         const ctx = canvas.getContext('2d');
-                        const offsetX = (img.width - (currentRatio > targetRatio ? w : img.width * (targetRatio / currentRatio))) / 2;
-                        const offsetY = (img.height - (currentRatio > targetRatio ? img.height * (currentRatio / targetRatio) : h)) / 2;
 
-                        ctx.drawImage(img, -offsetX, -offsetY, img.width, img.height);
+                        const imgRatio = img.width / img.height;
+                        const targetRatio = maxWidth / maxHeight;
+                        let drawW, drawH, offsetX, offsetY;
+
+                        if (imgRatio > targetRatio) {
+                            drawH = maxHeight;
+                            drawW = maxHeight * imgRatio;
+                            offsetX = (maxWidth - drawW) / 2;
+                            offsetY = 0;
+                        } else {
+                            drawW = maxWidth;
+                            drawH = maxWidth / imgRatio;
+                            offsetX = 0;
+                            offsetY = (maxHeight - drawH) / 2;
+                        }
+
+                        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
 
                         canvas.toBlob(function(blob) {
-                            resolve(new File([blob], file.name, { type: 'image/jpeg', quality: 0.9 }));
+                            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
                         }, 'image/jpeg', 0.9);
                     };
                     img.src = e.target.result;

@@ -462,9 +462,8 @@ const Leaderboard = {
 // ============================================
 const Storage = {
     async uploadCover(userId, file) {
-        const ext = file.name.split('.').pop();
-        const path = `${userId}/${Date.now()}.${ext}`;
-        const { data, error } = await sb.storage.from('game-covers').upload(path, file, { upsert: true });
+        const path = `${userId}/${Date.now()}.jpg`;
+        const { data, error } = await sb.storage.from('game-covers').upload(path, file, { contentType: 'image/jpeg', upsert: true });
         if (error) return { data: null, error };
         const { data: urlData } = sb.storage.from('game-covers').getPublicUrl(path);
         return { data: { path, url: urlData.publicUrl }, error: null };
