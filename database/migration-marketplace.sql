@@ -3,11 +3,25 @@
 -- Ejecutar en Supabase SQL Editor
 -- ============================================
 
--- 1. Agregar seller_id a games (quién vende el juego)
-ALTER TABLE games ADD COLUMN seller_id UUID REFERENCES profiles(id);
-
--- 2. Limpiar juegos existentes (empezar de cero)
+-- 1. Limpiar tablas que referencian games (orden correcto)
+DELETE FROM tournament_participants;
+DELETE FROM tournaments;
+DELETE FROM daily_contests;
+DELETE FROM contest_participants;
+DELETE FROM contest_tickets;
+DELETE FROM purchase_items;
+DELETE FROM purchase_history;
+DELETE FROM library;
+DELETE FROM wishlist;
+DELETE FROM cart;
+DELETE FROM reviews;
+DELETE FROM user_achievements;
+DELETE FROM game_genres;
+DELETE FROM game_platforms;
 DELETE FROM games;
+
+-- 2. Agregar seller_id a games (quién vende el juego)
+ALTER TABLE games ADD COLUMN seller_id UUID REFERENCES profiles(id);
 
 -- 3. RLS: Permitir a usuarios autenticados insertar juegos
 CREATE POLICY "Authenticated users can insert games"
@@ -56,6 +70,6 @@ CREATE POLICY "Users can delete own game covers"
     TO authenticated
     USING (auth.uid()::text = (storage.foldername(name))[1]);
 
--- 10. Grant permissions for new columns
+-- 10. Grant permissions
 GRANT SELECT ON games TO anon;
 GRANT ALL ON games TO authenticated;
