@@ -235,10 +235,11 @@
         document.getElementById('coverFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede superar 5MB'); return; }
+            if (file.size > 2 * 1024 * 1024) { alert('La imagen no puede superar 2MB'); return; }
 
             showNotification('Procesando imagen...', 'info');
             coverFile = await resizeImage(file, 600, 400);
+            console.log('Cover file ready:', coverFile.name, coverFile.size, 'bytes', coverFile.type);
 
             const reader = new FileReader();
             reader.onload = function(ev) {
@@ -264,7 +265,13 @@
             btn.disabled = true;
 
             const { data: coverData, error: coverErr } = await SupabaseApp.Storage.uploadCover(user.id, coverFile);
-            if (coverErr) { showNotification('Error al subir portada', 'error'); btn.textContent = '🚀 Publicar Juego'; btn.disabled = false; return; }
+            if (coverErr) {
+                console.error('Storage upload error:', coverErr);
+                showNotification('Error al subir portada: ' + (coverErr.message || coverErr.error || 'Error desconocido'), 'error');
+                btn.textContent = '🚀 Publicar Juego';
+                btn.disabled = false;
+                return;
+            }
 
             const slug = document.getElementById('title').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             const gameData = {
