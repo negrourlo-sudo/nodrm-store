@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /configuracion.html
+Disallow: /carrito.html
+Disallow: /subir-juego.html
+
+Sitemap: https://nodrm.netlify.app/sitemap.xml

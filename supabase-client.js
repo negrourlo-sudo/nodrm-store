@@ -5,7 +5,14 @@
 const SUPABASE_URL = 'https://akljuohhadsnryikgufc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrbGp1b2hoYWRzbnJ5aWtndWZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MTM4NTMsImV4cCI6MjEwMDA4OTg1M30.PJ9eHt4JdgrpFDqMJC1disdy65ixPXHS9wDTMAr4ENQ';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: localStorage
+    }
+});
 
 // ============================================
 // AUTH
@@ -54,6 +61,11 @@ const Auth = {
 
     async updatePassword(newPassword) {
         const { data, error } = await sb.auth.updateUser({ password: newPassword });
+        return { data, error };
+    },
+
+    async resendConfirmation(email) {
+        const { data, error } = await sb.auth.resend({ type: 'signup', email });
         return { data, error };
     }
 };

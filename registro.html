@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoDRM - Crear Cuenta</title>
+    <title>Crear Cuenta — NoDRM</title>
+    <meta name="description" content="Regístrate gratis en NoDRM y empieza a comprar y vende videojuegos sin restricciones. Marketplace DRM-free para gamers.">
+    <link rel="canonical" href="https://nodrm.netlify.app/registro.html">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Crear Cuenta — NoDRM">
+    <meta property="og:description" content="Regístrate gratis en NoDRM y empieza a comprar y vender videojuegos sin restricciones.">
+    <meta property="og:url" content="https://nodrm.netlify.app/registro.html">
+    <meta property="og:site_name" content="NoDRM">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Crear Cuenta — NoDRM">
+    <link rel="preconnect" href="https://akljuohhadsnryikgufc.supabase.co">
     <link rel="stylesheet" href="styles.css">
     <style>
         .form-row {
@@ -201,10 +211,15 @@
             </div>
         </div>
         
-        <div class="success-animation" id="successAnimation">
+        <div class="success-animation" id="confirmEmailScreen" style="flex-direction:column;gap:1.5rem;">
             <div class="success-content">
-                <div class="success-icon">✓</div>
-                <div class="success-text">Cuenta creada</div>
+                <div class="success-icon">📧</div>
+                <div class="success-text" id="confirmText">Cuenta creada. Revisa tu email para confirmar tu cuenta.</div>
+                <p style="color:var(--gray-medium);font-family:var(--font-mono);font-size:0.85rem;margin-top:1rem;" id="confirmEmail"></p>
+                <div style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.8rem;align-items:center;">
+                    <button onclick="resendEmail()" class="btn btn-primary" id="resendBtn" style="width:auto;padding:0.6rem 2rem;">Reenviar email de confirmación</button>
+                    <a href="login.html" style="color:var(--neon-cyan);font-size:0.85rem;text-decoration:none;">Ir a Iniciar Sesión</a>
+                </div>
             </div>
         </div>
     </main>
@@ -291,20 +306,22 @@
                 return;
             }
 
-            if (data.user) {
-                const userData = {
-                    id: data.user.id,
-                    email: data.user.email,
-                    username: username,
-                    displayName: firstName + ' ' + lastName,
-                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username,
-                    createdAt: data.user.created_at
-                };
-                localStorage.setItem('nodrm_currentUser', JSON.stringify(userData));
-            }
+            document.getElementById('confirmEmail').textContent = email;
+            document.getElementById('confirmEmailScreen').classList.add('show');
 
-            document.getElementById('successAnimation').classList.add('show');
-            setTimeout(() => window.location.href = 'index.html', 1500);
+            async function resendEmail() {
+                const rBtn = document.getElementById('resendBtn');
+                rBtn.textContent = 'Reenviando...';
+                rBtn.disabled = true;
+                const { error: resendErr } = await SupabaseApp.Auth.resendConfirmation(email);
+                if (resendErr) {
+                    alert('Error al reenviar: ' + (resendErr.message || 'Intenta de nuevo'));
+                } else {
+                    document.getElementById('confirmText').textContent = 'Email reenviado. Revisa tu bandeja de entrada.';
+                }
+                rBtn.textContent = 'Reenviar email de confirmación';
+                rBtn.disabled = false;
+            }
         });
 
         if (localStorage.getItem('nodrm_currentUser')) window.location.href = 'index.html';

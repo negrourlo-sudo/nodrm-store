@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoDRM - Subir Juego</title>
+    <title>Subir y Vender Juego — NoDRM Marketplace</title>
+    <meta name="description" content="Publica y vende tus videojuegos en el marketplace NoDRM. Sube tu juego, establece tu precio y llega a miles de gamers DRM-free.">
+    <link rel="canonical" href="https://nodrm.netlify.app/subir-juego.html">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Subir y Vender Juego — NoDRM Marketplace">
+    <meta property="og:description" content="Publica y vende tus videojuegos en el marketplace NoDRM. Sin DRM, sin restricciones.">
+    <meta property="og:url" content="https://nodrm.netlify.app/subir-juego.html">
+    <meta property="og:site_name" content="NoDRM">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Subir y Vender Juego — NoDRM">
+    <link rel="preconnect" href="https://akljuohhadsnryikgufc.supabase.co">
     <link rel="stylesheet" href="styles.css">
     <style>
         .upload-form { max-width: 700px; margin: 0 auto; }
@@ -202,6 +212,14 @@
             const user = AuthManager.getCurrentUser();
             if (!user) {
                 showNotification('Inicia sesión para subir juegos', 'info');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                return;
+            }
+
+            const { session } = await SupabaseApp.Auth.getSession();
+            if (!session) {
+                showNotification('Sesión expirada. Inicia sesión de nuevo.', 'info');
+                localStorage.removeItem('nodrm_currentUser');
                 setTimeout(() => window.location.href = 'login.html', 1500);
                 return;
             }

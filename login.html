@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoDRM - Iniciar Sesión</title>
+    <title>Iniciar Sesión — NoDRM</title>
+    <meta name="description" content="Accede a tu cuenta NoDRM para gestionar tu biblioteca de videojuegos DRM-free. Compra, vende y juega sin restricciones.">
+    <link rel="canonical" href="https://nodrm.netlify.app/login.html">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Iniciar Sesión — NoDRM">
+    <meta property="og:description" content="Accede a tu cuenta NoDRM para gestionar tu biblioteca de videojuegos DRM-free.">
+    <meta property="og:url" content="https://nodrm.netlify.app/login.html">
+    <meta property="og:site_name" content="NoDRM">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Iniciar Sesión — NoDRM">
+    <link rel="preconnect" href="https://akljuohhadsnryikgufc.supabase.co">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body data-page="login">
@@ -56,6 +66,12 @@
                     <div class="auth-footer">
                         <p>No tienes cuenta? <a href="registro.html">Regístrate</a></p>
                     </div>
+
+                    <div id="resendSection" style="display:none;margin-top:1rem;padding:1rem;border:1px solid var(--neon-yellow);border-radius:var(--radius);text-align:center;">
+                        <p style="color:var(--neon-yellow);font-family:var(--font-mono);font-size:0.85rem;margin-bottom:0.8rem;">Email no confirmado</p>
+                        <button onclick="resendConfirmation()" class="btn btn-secondary" id="resendBtn" style="font-size:0.85rem;padding:0.5rem 1.5rem;">Reenviar email de confirmación</button>
+                        <p id="resendMsg" style="color:var(--gray-medium);font-size:0.8rem;margin-top:0.5rem;display:none;"></p>
+                    </div>
                 </form>
             </div>
         </div>
@@ -70,6 +86,8 @@
     <script>
         if (localStorage.getItem('nodrm_currentUser')) window.location.href = 'index.html';
 
+        let pendingEmail = '';
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = this.querySelector('button[type="submit"]');
@@ -78,11 +96,18 @@
 
             btn.textContent = 'Entrando...';
             btn.disabled = true;
+            document.getElementById('resendSection').style.display = 'none';
 
             const { data, error } = await SupabaseApp.Auth.signIn(email, password);
 
             if (error) {
-                alert(error.message || 'Email o contraseña incorrectos');
+                if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
+                    pendingEmail = email;
+                    document.getElementById('resendSection').style.display = 'block';
+                    document.getElementById('resendMsg').style.display = 'none';
+                } else {
+                    alert(error.message || 'Email o contraseña incorrectos');
+                }
                 btn.textContent = 'Entrar';
                 btn.disabled = false;
                 return;
@@ -105,6 +130,25 @@
             btn.textContent = '✓ OK';
             setTimeout(() => window.location.href = 'index.html', 800);
         });
+
+        async function resendConfirmation() {
+            if (!pendingEmail) return;
+            const btn = document.getElementById('resendBtn');
+            const msg = document.getElementById('resendMsg');
+            btn.textContent = 'Reenviando...';
+            btn.disabled = true;
+            const { error } = await SupabaseApp.Auth.resendConfirmation(pendingEmail);
+            if (error) {
+                msg.textContent = 'Error: ' + (error.message || 'Intenta de nuevo');
+                msg.style.color = 'var(--neon-pink)';
+            } else {
+                msg.textContent = 'Email reenviado. Revisa tu bandeja de entrada.';
+                msg.style.color = 'var(--neon-green)';
+            }
+            msg.style.display = 'block';
+            btn.textContent = 'Reenviar email de confirmación';
+            btn.disabled = false;
+        }
     </script>
 </body>
 </html>

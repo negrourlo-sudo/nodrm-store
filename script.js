@@ -55,7 +55,18 @@ const AuthManager = {
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
-    currentUser = AuthManager.getCurrentUser();
+    const localUser = AuthManager.getCurrentUser();
+    if (localUser) {
+        const { session } = await SupabaseApp.Auth.getSession();
+        if (!session) {
+            localStorage.removeItem('nodrm_currentUser');
+            currentUser = null;
+        } else {
+            currentUser = localUser;
+        }
+    } else {
+        currentUser = null;
+    }
     await loadUserData();
     initApp();
     updateHeaderAuth();
